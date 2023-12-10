@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>CS2D</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div id="matchesPanel">
+        <div id="statusOutput">Ready</div>
+        <label for="demoInput">Open Demo File:</label>
+        <input type="file" id="demoInput" name="demo" accept=".dem" />
+
+        <label for="matchHistoryButton">Load from URL:</label>
+        <button id="matchHistoryButton">Match History</button>
+        <input id="matchHistoryUrlInput" type="text" placeholder="input match url here"
+            value="http://replay190.valve.net/730/003654969677295124605_0866816312.dem.bz2"></input>
+        <button id="loadMatchButton">Load</button>
+
+    </div>
+    <div id="mapPanel">
+        <input type="range" id="progressBar" step="any">
+        <canvas id="canvas"></canvas>
+    </div>
+</body>
+
+<script src="ui.js"></script>
+<script type="module">
+    import init, { parseEvent, parseTicks } from './pkg/demoparser2.js';
+    //import * as demoparser2 from './node_modules/demoparser2/demoparser2.js';
+    import SevenZip from "./node_modules/7z-wasm/7zz.es6.js";
+    const sevenZip = await SevenZip();
+    await init();
+
+
+
+    loadMatchButton.addEventListener("click", function () {
+        let url = matchHistoryUrlInput.value;
+        downloadDemo(url);
+    })
+    async function parseDemo(uint8Array) {
+        setStatus("analyzing");
+        drawHtmlThenContinueWith(function () {
+
+
+            const eventNames = [
+                "round_start", "round_end",
+                "player_death"
+            ];
+
+
+            //resultEvents = parseEvent(uint8Array, "player_death", [], ["total_rounds_played", "is_warmup_period"]);
+            firstParsedTick = 0 * 64;
+            lastParsedTick = 101 * 64;
+            // resultTicks = parseTicks(uint8Array, ["X", "Y"], [firstParsedTick, lastParsedTick]);
+            //parseTicks(path: string, wantedProps: Array<string>, wantedTicks?: Array<number> | undefined | null, structOfArrays?: boolean | undefined | null): any
+            resultTicks = parseTicks(uint8Array, ["X", "Y"]);
+
+            // resultTicks = parseTicks(uint8Array, ["X", "Y"], [0, 1], true);
+
+            clearStatus();
+            drawFrame(currentTick, resultTicks);
+            let a = 1;
+        });
+    }
+
+
+
+    async function downloadDemo(url) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', proxyUrl + url, true);
+        xhr.responseType = 'arraybuffer';
+        xhr.send();
+        xhr.onprogress = function (evt) {
+            let progress = Math.round((evt.loaded / evt.total) * 100);
+            setStatus("downloading demo", progress);
+        };
+        xhr.onload = function () {
+            setStatus("unzipping");
+            drawHtmlThenContinueWith(function () {
+                var archiveData = new Uint8Array(xhr.response);
+                const archiveName = "newDemo.dem.bz2";
+                const stream = sevenZip.FS.open(archiveName, "w+");
+                sevenZip.FS.write(stream, archiveData, 0, archiveData.length);
+                sevenZip.FS.close(stream);
+                const filesToExtract = ["newDemo.dem"];
+
+                let cpuCores = Math.round(navigator.hardwareConcurrency / 2);
+                // sevenZip.callMain(["e", archiveName, "-bb1", ...filesToExtract]);
+                sevenZip.callMain(["x", archiveName, ...filesToExtract]);
+
+                let unzippedFile = sevenZip.FS.readFile(filesToExtract[0]);
+
+
+                parseDemo(unzippedFile);
+            });
+
+        }
+    }
+
+    function drawHtmlThenContinueWith(functionToDoAfterWards) {
+        setTimeout(functionToDoAfterWards, 0);
+    }
+
+</script>
+<script src="draw.js"></script>
+
+</html>

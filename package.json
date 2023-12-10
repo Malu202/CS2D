@@ -1,0 +1,16 @@
+{
+  "name": "cs2d",
+  "version": "0.1.0",
+  "description": "",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "info": "7z-wasm --help"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "7z-wasm": "^1.1.0",
+    "demoparser2": "^0.15.0"
+  }
+}
