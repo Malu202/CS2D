@@ -1,5 +1,9 @@
 let background = new Image();
-background.src = "MapImages/Nuuke.png";
+// background.src = "MapImages/Nuuke.png";
+let imagePre = "MapImages_export/";
+let imagePost = "_radar_psd.png"
+background.src = imagePre + "de_nuke" + imagePost;
+
 let canvas = document.getElementById("canvas");
 let context = canvas.getContext("2d");
 canvas.width = 512;
@@ -18,23 +22,42 @@ function drawFrame(currentTick, resultTicks) {
 
 
     if (!resultTicks) return;
+
+    let startIndex = Math.min(currentTick * 10 - 1, resultTicks.get("tick").length - 1);
+    while (true) {
+        if (startIndex == 0) break;
+        let tick = resultTicks.get("tick")[startIndex];
+        let previousTick = resultTicks.get("tick")[startIndex - 1];
+        if (tick >= currentTick && previousTick < currentTick) {
+            if (tick != currentTick) {
+                console.log("Requested tick does not exist (" + currentTick + "), skipping to " + tick + " instead");
+                currentTick = tick;
+            }
+            break;
+        }
+        else if (previousTick >= currentTick) startIndex--;
+        else if (tick < currentTick) startIndex++;
+    }
     context.font = "12px Arial";
     context.fillStyle = 'white';
     context.textAlign = "center";
-    context.fillText(Math.round((currentTick - 1) / 64), 100, 20);
-    progressBar.value = 100 * currentTick / (resultTicks.length / 10);
-    for (let i = 0; i < 10; i++) {
-        drawPlayer(resultTicks, (currentTick - 1) * 10 + i);
-    }
+    // context.fillText(Math.round((currentTick - 1) / 64), 100, 20);
+    context.fillText(currentTick, 100, 20);
 
+    progressBar.value = 100 * (currentTick - firstParsedTick()) / (lastParsedTick() - firstParsedTick());
+
+    for (let i = startIndex; i < startIndex + 10; i++) {
+        drawPlayer(resultTicks, i);
+        if (resultTicks.get("tick")[i] != currentTick) break;
+    }
 }
 
 function drawPlayer(data, index) {
-    let worldX = data[index].get("X");
-    let worldY = data[index].get("Y");
+    let worldX = data.get("X")[index];
+    let worldY = data.get("Y")[index];
     let drawX = clampPosition(worldX, true);
     let drawY = clampPosition(worldY, false);
-    let name = data[index].get("name");
+    let name = data.get("name")[index];
     context.beginPath();
     context.arc(drawX, drawY, 4, 0, Math.PI * 2);
     context.lineWidth = 3;

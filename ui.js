@@ -10,10 +10,8 @@ const proxyUrl = "https://proxy.aschwm.workers.dev/?apiurl=";
 
 
 let resultTicks;
-let currentTick = 100 * 64;
+let currentTick = 1 * 64 + 1;
 let resultEvents;
-let firstParsedTick;
-let lastParsedTick;
 
 
 function setStatus(status, progress) {
@@ -37,25 +35,34 @@ matchHistoryButton.addEventListener("click", function () {
     window.open("https://steamcommunity.com/my/gcpd/730?tab=matchhistorypremier", "_blank");
 });
 
+function firstParsedTick() {
+    return resultTicks.get("tick")[0];
+}
+function lastParsedTick() {
+    return resultTicks.get("tick")[resultTicks.get("tick").length - 1];
+}
 
 document.addEventListener('keypress', (event) => {
     let timestep = 64;
     if (event.shiftKey) timestep = 16;
-    if (event.code == "KeyL") {
-        currentTick += timestep;
-    } else if (event.code == "KeyJ") {
-        currentTick -= timestep;
-        if (currentTick < 0) currentTick = 0;
-    }
+    if (event.code == "KeyL") currentTick += timestep;
+    if (event.code == "KeyJ") currentTick -= timestep;
+
+    let lastTick = lastParsedTick();
+    if (currentTick > lastTick) currentTick = lastTick;
+    let firstTick = firstParsedTick();
+    if (currentTick < firstTick) currentTick = firstTick;
     drawFrame(currentTick, resultTicks);
 }, false);
 
 
 progressBar.addEventListener("input", function (event) {
     if (!resultTicks) return;
-    currentTick = Math.round((progressBar.value / 100) * (resultTicks.length / 10)) + 1;
+    let firstTick = firstParsedTick();
+    currentTick = Math.round((progressBar.value / 100) * (lastParsedTick() - firstTick) + 1) + firstTick;
     drawFrame(currentTick, resultTicks);
 });
+
 
 
 input.addEventListener("change", async function (evt) {

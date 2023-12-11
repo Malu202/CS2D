@@ -56,13 +56,19 @@
 
 
             //resultEvents = parseEvent(uint8Array, "player_death", [], ["total_rounds_played", "is_warmup_period"]);
-            firstParsedTick = 0 * 64;
-            lastParsedTick = 101 * 64;
             // resultTicks = parseTicks(uint8Array, ["X", "Y"], [firstParsedTick, lastParsedTick]);
             //parseTicks(path: string, wantedProps: Array<string>, wantedTicks?: Array<number> | undefined | null, structOfArrays?: boolean | undefined | null): any
-            resultTicks = parseTicks(uint8Array, ["X", "Y"]);
+            // resultTicks = parseTicks(uint8Array, ["X", "Y"]);
 
-            // resultTicks = parseTicks(uint8Array, ["X", "Y"], [0, 1], true);
+            let from = 64 * 100;
+            let to = 64 * 110;
+            let requestedTicks = [from, to];
+            requestedTicks = null;
+
+            resultEvents = parseEvent(uint8Array, "player_death", [], ["total_rounds_played", "is_warmup_period"]);
+            resultTicks = parseTicks(uint8Array, ["X", "Y"], requestedTicks, true);
+            currentTick = Math.round((to - from) / 2);
+
 
             clearStatus();
             drawFrame(currentTick, resultTicks);
