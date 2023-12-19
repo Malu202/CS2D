@@ -4,6 +4,7 @@ let matchHistoryButton = document.getElementById("matchHistoryButton");
 let loadMatchButton = document.getElementById("loadMatchButton");
 let matchHistoryUrlInput = document.getElementById("matchHistoryUrlInput");
 let input = document.getElementById("demoInput");
+let roundTickMarks = document.getElementById("roundTicks");
 
 const proxyUrl = "https://proxy.aschwm.workers.dev/?apiurl=";
 
@@ -11,7 +12,10 @@ const proxyUrl = "https://proxy.aschwm.workers.dev/?apiurl=";
 
 let resultTicks;
 let currentTick = 1 * 64 + 1;
-let resultEvents;
+let allEvents;
+let roundStartEvents;
+let roundEndEvents;
+let roundsTotal;
 
 
 function setStatus(status, progress) {
@@ -74,3 +78,12 @@ input.addEventListener("change", async function (evt) {
     setStatus("loading demo");
     drawHtmlThenContinueWith(() => reader.readAsArrayBuffer(evt.target.files[0]));
 });
+
+function addRoundTicks(events) {
+    roundTickMarks.innerHTML = "";
+    for (let i = 0; i < events.length; i++) {
+        let option = document.createElement("option");
+        option.value = 100 * events[i].get("tick") / lastParsedTick();
+        roundTickMarks.appendChild(option);
+    }
+}

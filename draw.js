@@ -1,6 +1,6 @@
 let background = new Image();
 // background.src = "MapImages/Nuuke.png";
-let imagePre = "MapImages_export/";
+let imagePre = "MapImages/";
 let imagePost = "_radar_psd.png"
 background.src = imagePre + "de_nuke" + imagePost;
 
@@ -9,10 +9,16 @@ let context = canvas.getContext("2d");
 canvas.width = 512;
 canvas.height = 512;
 background.onload = function () {
+    setupCanvas()
+};
+window.addEventListener("resize", () => {
+    setupCanvas()
+});
+function setupCanvas() {
     canvas.width = canvas.clientWidth;
     canvas.height = canvas.clientHeight;
-    drawFrame();
-};
+    drawFrame(currentTick, resultTicks);
+}
 
 function drawFrame(currentTick, resultTicks) {
     context.clearRect(0, 0, canvas.width, canvas.height)
@@ -38,35 +44,56 @@ function drawFrame(currentTick, resultTicks) {
         else if (previousTick >= currentTick) startIndex--;
         else if (tick < currentTick) startIndex++;
     }
-    context.font = "12px Arial";
+    let resolutionScaling = Math.min(canvas.width, canvas.height) / 1080;
+    let playersize = Math.round(5 * resolutionScaling);
+    let textSize = Math.round(8 * resolutionScaling)
+    context.font = `${textSize}px Arial`;
     context.fillStyle = 'white';
     context.textAlign = "center";
     // context.fillText(Math.round((currentTick - 1) / 64), 100, 20);
-    context.fillText(currentTick, 100, 20);
+    context.fillText(currentTick, 100 * resolutionScaling, 20 * resolutionScaling);
 
     progressBar.value = 100 * (currentTick - firstParsedTick()) / (lastParsedTick() - firstParsedTick());
 
     for (let i = startIndex; i < startIndex + 10; i++) {
-        drawPlayer(resultTicks, i);
+        drawPlayer(resultTicks, i, playersize, textSize);
         if (resultTicks.get("tick")[i] != currentTick) break;
     }
 }
+function inDegrees(radians) {
+    return 360 * radians / (2 * Math.PI)
+}
 
-function drawPlayer(data, index) {
+function drawPlayer(data, index, size, textSize) {
+    if (!data.get("is_alive")[index]) return;
     let worldX = data.get("X")[index];
     let worldY = data.get("Y")[index];
+    let yaw = data.get("yaw")[index] * 2 * Math.PI / 360;
     let drawX = clampPosition(worldX, true);
     let drawY = clampPosition(worldY, false);
     let name = data.get("name")[index];
+
+    drawX = Math.round(drawX);
+    drawY = Math.round(drawY);
+
+
     context.beginPath();
-    context.arc(drawX, drawY, 4, 0, Math.PI * 2);
-    context.lineWidth = 3;
-    context.strokeStyle = 'white';
-    context.stroke();
-    context.font = "12px Arial";
+    context.moveTo(drawX + size * Math.cos(yaw + Math.PI / 2), drawY - size * Math.sin(yaw + Math.PI / 2));
+    context.lineTo(drawX + 1.5 * size * Math.cos(yaw), drawY - 1.5 * size * Math.sin(yaw));
+    context.lineTo(drawX + size * Math.cos(yaw - Math.PI / 2), drawY - size * Math.sin(yaw - Math.PI / 2));
+    context.fillStyle = "white";
+    //context.fill();
+
+    //context.beginPath();
+    context.moveTo(drawX, drawY);
+    context.arc(drawX, drawY, size, -yaw + (Math.PI / 2), -yaw - (Math.PI / 2));
+    context.fillStyle = "white";
+    context.fill();
+
+    context.font = `${textSize}px Arial`;;
     context.fillStyle = 'white';
     context.textAlign = "center";
-    context.fillText(name, drawX, drawY - 8);
+    context.fillText(name, drawX, drawY - size * 2);
     let a = 0;
 }
 

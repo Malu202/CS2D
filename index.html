@@ -25,7 +25,12 @@
 
     </div>
     <div id="mapPanel">
-        <input type="range" id="progressBar" step="any">
+        <input type="range" id="progressBar" step="any" list="roundTicks">
+        <datalist id="roundTicks">
+            <option value="0"></option>
+            <option value="100"></option>
+        </datalist>
+
         <canvas id="canvas"></canvas>
     </div>
 </body>
@@ -49,10 +54,14 @@
         drawHtmlThenContinueWith(function () {
 
 
-            const eventNames = [
-                "round_start", "round_end",
-                "player_death"
-            ];
+            // const eventNames = [
+            //     "begin_new_match", "round_start", "round_end", "round_mvp",
+            //     "player_death", "bomb_planted", "bomb_defused", "hostage_rescued",
+            //     "weapon_fire", "flashbang_detonate", "hegrenade_detonate",
+            //     "molotov_detonate", "smokegrenade_detonate", "player_hurt",
+            //     "player_blind"
+            // ];
+
 
 
             //resultEvents = parseEvent(uint8Array, "player_death", [], ["total_rounds_played", "is_warmup_period"]);
@@ -60,17 +69,28 @@
             //parseTicks(path: string, wantedProps: Array<string>, wantedTicks?: Array<number> | undefined | null, structOfArrays?: boolean | undefined | null): any
             // resultTicks = parseTicks(uint8Array, ["X", "Y"]);
 
+
+            // allEvents = parseEvent(uint8Array, [], ["is_warmup_period"]);
+
+            // const matchStartTick = allEvents.find(event => event.event_name === "begin_new_match")?.tick || 0;
+            // const roundStartEvents = allEvents.filter(event => event.event_name === "round_start");
+            // const roundEndEvents = allEvents.filter(event => event.event_name === "round_end" && event.tick >= matchStartTick);
+
+            roundStartEvents = parseEvent(uint8Array, "round_start", ["is_warmup_period"]);
+            roundEndEvents = parseEvent(uint8Array, "round_end", ["is_warmup_period"]);
+            roundsTotal = parseEvent(uint8Array, "team_score_first_half", ["is_warmup_period"]);
+
+
             let from = 64 * 100;
             let to = 64 * 110;
             let requestedTicks = [from, to];
             requestedTicks = null;
-
-            resultEvents = parseEvent(uint8Array, "player_death", [], ["total_rounds_played", "is_warmup_period"]);
-            resultTicks = parseTicks(uint8Array, ["X", "Y"], requestedTicks, true);
+            resultTicks = parseTicks(uint8Array, ["X", "Y", "yaw", "is_alive"], [], true);
+            //allEvents = allEvents.filter(event => event.tick >= matchStartTick);
             currentTick = Math.round((to - from) / 2);
 
-
             clearStatus();
+            addRoundTicks(roundStartEvents);
             drawFrame(currentTick, resultTicks);
             let a = 1;
         });
