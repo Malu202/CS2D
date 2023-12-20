@@ -2,7 +2,11 @@ let background = new Image();
 // background.src = "MapImages/Nuuke.png";
 let imagePre = "MapImages/";
 let imagePost = "_radar_psd.png"
-background.src = imagePre + "de_nuke" + imagePost;
+loadBackgroundImage("de_nuke")
+
+function loadBackgroundImage(mapname) {
+    background.src = imagePre + mapname + imagePost;
+}
 
 let canvas = document.getElementById("canvas");
 let context = canvas.getContext("2d");
@@ -82,9 +86,7 @@ function drawPlayer(data, index, size, textSize) {
     context.lineTo(drawX + 1.5 * size * Math.cos(yaw), drawY - 1.5 * size * Math.sin(yaw));
     context.lineTo(drawX + size * Math.cos(yaw - Math.PI / 2), drawY - size * Math.sin(yaw - Math.PI / 2));
     context.fillStyle = "white";
-    //context.fill();
-
-    //context.beginPath();
+    
     context.moveTo(drawX, drawY);
     context.arc(drawX, drawY, size, -yaw + (Math.PI / 2), -yaw - (Math.PI / 2));
     context.fillStyle = "white";
@@ -105,13 +107,7 @@ function fillCanvasWithImage(canv, ctx, img) {
 }
 
 
-let minX = -1968.706298828125;
-let maxX = 2706.302490234375;
-let minY = -2479.96875;
-let maxY = 932.2528076171875;
-let scale = (maxX - minX + 2300);
-let xOffset = minX - 1350;
-let yOffset = minY - 1700;
+
 
 function clampPosition(position, isX) {
     let landscape = canvas.width > canvas.height;

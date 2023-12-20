@@ -22,7 +22,30 @@
         <input id="matchHistoryUrlInput" type="text" placeholder="input match url here"
             value="http://replay190.valve.net/730/003654969677295124605_0866816312.dem.bz2"></input>
         <button id="loadMatchButton">Load</button>
-
+        <select name="maps" id="mapDropdown">
+            <option value="cs_italy">Italy</option>
+            <option value="cs_office">Office</option>
+            <option value="de_ancient">Ancient</option>
+            <option value="de_anubis">Anubis</option>
+            <option value="de_dust2">Dust 2</option>
+            <option value="de_inferno">Inferno</option>
+            <option value="de_mirage">Mirage</option>
+            <option selected value="de_nuke">Nuke</option>
+            <option value="de_overpass">Overpass</option>
+            <option value="de_vertigo">Vertigo</option>
+        </select>
+        <div style="display: flex;flex-direction: column; display:none">
+            <label for="scale">scale</label>
+            <input type="range" id="scale" step="any" min=3000 max=9000
+                oninput="scale=this.value; drawFrame(currentTick, resultTicks);">
+            <label for="xOffset">xOffset</label>
+            <input type="range" id="xOffset" step="any" min=-6000 max=6000
+                oninput="xOffset=this.value; drawFrame(currentTick, resultTicks);">
+            <label for="yOffset">yOffset</label>
+            <input type="range" id="yOffset" step="any" min=-6000 max=6000
+                oninput="yOffset=this.value; drawFrame(currentTick, resultTicks);">
+            <button onclick="printScale()">print</button>
+        </div>
     </div>
     <div id="mapPanel">
         <input type="range" id="progressBar" step="any" list="roundTicks">
@@ -119,7 +142,7 @@
 
                 let cpuCores = Math.round(navigator.hardwareConcurrency / 2);
                 // sevenZip.callMain(["e", archiveName, "-bb1", ...filesToExtract]);
-                sevenZip.callMain(["x", archiveName, ...filesToExtract]);
+                sevenZip.callMain(["x", archiveName, '-y', ...filesToExtract]);
 
                 let unzippedFile = sevenZip.FS.readFile(filesToExtract[0]);
 
