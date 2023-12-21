@@ -33,14 +33,17 @@ function drawFrame(currentTick, resultTicks) {
 
     if (!resultTicks) return;
 
+    let cancel = false;
+    setTimeout(() => { cancel = true; }, 3000)
     let startIndex = Math.min(currentTick * 10 - 1, resultTicks.get("tick").length - 1);
     while (true) {
+        if (cancel) break;
         if (startIndex == 0) break;
         let tick = resultTicks.get("tick")[startIndex];
         let previousTick = resultTicks.get("tick")[startIndex - 1];
         if (tick >= currentTick && previousTick < currentTick) {
             if (tick != currentTick) {
-                console.log("Requested tick does not exist (" + currentTick + "), skipping to " + tick + " instead");
+                //console.log("Requested tick does not exist (" + currentTick + "), skipping to " + tick + " instead");
                 currentTick = tick;
             }
             break;
@@ -86,7 +89,7 @@ function drawPlayer(data, index, size, textSize) {
     context.lineTo(drawX + 1.5 * size * Math.cos(yaw), drawY - 1.5 * size * Math.sin(yaw));
     context.lineTo(drawX + size * Math.cos(yaw - Math.PI / 2), drawY - size * Math.sin(yaw - Math.PI / 2));
     context.fillStyle = "white";
-    
+
     context.moveTo(drawX, drawY);
     context.arc(drawX, drawY, size, -yaw + (Math.PI / 2), -yaw - (Math.PI / 2));
     context.fillStyle = "white";
