@@ -1,4 +1,4 @@
-node_modules
+node_modules/*
 CS2 files
 MapImages_old
 package-lock.json
@@ -6,3 +6,8 @@ pkg/*.html
 pkg/*.ts
 pkg/package.json
 pkg/*.css
+
+!node_modules/7z-wasm
+node_modules/7z-wasm/*
+!node_modules/7z-wasm/7zz.es6.js
+!node_modules/7z-wasm/7zz.wasm
