@@ -1,3 +1,7 @@
 node_modules
 CS2 files
 MapImages_old
+package-lock.json
+pkg
+!pkg/*.wasm
+!pkg/*.js

@@ -15,12 +15,11 @@
     <div id="matchesPanel">
         <div id="statusOutput">Ready</div>
         <label for="demoInput">Open Demo File:</label>
-        <input type="file" id="demoInput" name="demo" accept=".dem" />
+        <input type="file" id="demoInput" name="demo" accept=".dem, .dem.gz, .dem.bz2" />
 
         <label for="matchHistoryButton">Load from URL:</label>
         <button id="matchHistoryButton">Match History</button>
-        <input id="matchHistoryUrlInput" type="text" placeholder="input match url here"
-            value="http://replay190.valve.net/730/003654969677295124605_0866816312.dem.bz2"></input>
+        <input id="matchHistoryUrlInput" type="text" placeholder="input match url here"></input>
         <button id="loadMatchButton">Load</button>
         <select name="maps" id="mapDropdown">
             <option value="cs_italy">Italy</option>
@@ -34,7 +33,7 @@
             <option value="de_overpass">Overpass</option>
             <option value="de_vertigo">Vertigo</option>
         </select>
-        <div style="display: flex;flex-direction: column; display:none">
+        <div style="display: flex;flex-direction: column;display:none">
             <label for="scale">scale</label>
             <input type="range" id="scale" step="any" min=3000 max=9000
                 oninput="scale=this.value; drawFrame(currentTick, resultTicks);">
@@ -76,44 +75,15 @@
         setStatus("analyzing");
         drawHtmlThenContinueWith(function () {
 
-
-            // const eventNames = [
-            //     "begin_new_match", "round_start", "round_end", "round_mvp",
-            //     "player_death", "bomb_planted", "bomb_defused", "hostage_rescued",
-            //     "weapon_fire", "flashbang_detonate", "hegrenade_detonate",
-            //     "molotov_detonate", "smokegrenade_detonate", "player_hurt",
-            //     "player_blind"
-            // ];
-
-
-
-            //resultEvents = parseEvent(uint8Array, "player_death", [], ["total_rounds_played", "is_warmup_period"]);
-            // resultTicks = parseTicks(uint8Array, ["X", "Y"], [firstParsedTick, lastParsedTick]);
-            //parseTicks(path: string, wantedProps: Array<string>, wantedTicks?: Array<number> | undefined | null, structOfArrays?: boolean | undefined | null): any
-            // resultTicks = parseTicks(uint8Array, ["X", "Y"]);
-
-
-            // allEvents = parseEvent(uint8Array, [], ["is_warmup_period"]);
-
-            // const matchStartTick = allEvents.find(event => event.event_name === "begin_new_match")?.tick || 0;
-            // const roundStartEvents = allEvents.filter(event => event.event_name === "round_start");
-            // const roundEndEvents = allEvents.filter(event => event.event_name === "round_end" && event.tick >= matchStartTick);
-
             roundStartEvents = parseEvent(uint8Array, "round_start", ["is_warmup_period"]);
             roundEndEvents = parseEvent(uint8Array, "round_end", ["is_warmup_period"]);
             roundsTotal = parseEvent(uint8Array, "team_score_first_half", ["is_warmup_period"]);
 
-
-            let from = 64 * 100;
-            let to = 64 * 110;
-            let requestedTicks = [from, to];
-            requestedTicks = null;
             resultTicks = parseTicks(uint8Array, ["X", "Y", "yaw", "is_alive"], [], true);
-            //allEvents = allEvents.filter(event => event.tick >= matchStartTick);
-            currentTick = Math.round((to - from) / 2);
-
             clearStatus();
+            currentTick = roundStartEvents[0].get("tick");
             addRoundTicks(roundStartEvents);
+            estimateMap();
             drawFrame(currentTick, resultTicks);
             let a = 1;
         });
@@ -131,31 +101,44 @@
             setStatus("downloading demo", progress);
         };
         xhr.onload = function () {
-            setStatus("unzipping");
-            drawHtmlThenContinueWith(function () {
-                var archiveData = new Uint8Array(xhr.response);
-                const archiveName = "newDemo.dem.bz2";
-                const stream = sevenZip.FS.open(archiveName, "w+");
-                sevenZip.FS.write(stream, archiveData, 0, archiveData.length);
-                sevenZip.FS.close(stream);
-                const filesToExtract = ["newDemo.dem"];
-
-                let cpuCores = Math.round(navigator.hardwareConcurrency / 2);
-                // sevenZip.callMain(["e", archiveName, "-bb1", ...filesToExtract]);
-                sevenZip.callMain(["x", archiveName, '-y', ...filesToExtract]);
-
-                let unzippedFile = sevenZip.FS.readFile(filesToExtract[0]);
-
-
-                parseDemo(unzippedFile);
-            });
-
-        }
+            unzipAndParse(new Uint8Array(xhr.response));
+        };
     }
 
-    function drawHtmlThenContinueWith(functionToDoAfterWards) {
-        setTimeout(functionToDoAfterWards, 1);
+    async function unzipAndParse(archiveData, filetype) {
+        setStatus("unzipping");
+        drawHtmlThenContinueWith(function () {
+            let archiveName = ".bz2"
+            if (filetype == "application/x-gzip") archiveName = ".gz"
+            archiveName = "newDemo.dem" + archiveName;
+            const stream = sevenZip.FS.open(archiveName, "w+");
+            sevenZip.FS.write(stream, archiveData, 0, archiveData.length);
+            sevenZip.FS.close(stream);
+            const filesToExtract = ["newDemo.dem"];
+
+            let cpuCores = Math.round(navigator.hardwareConcurrency / 2);
+            sevenZip.callMain(["x", archiveName, '-y', ...filesToExtract]);
+
+            let unzippedFile = sevenZip.FS.readFile(filesToExtract[0]);
+
+
+            parseDemo(unzippedFile);
+        });
     }
+
+    input.addEventListener("change", async function (evt) {
+        let reader = new FileReader();
+        reader.onload = function (event) {
+            const uint8Array = new Uint8Array(event.target.result);
+            let filename = evt.target.files[0].name;
+            let filetype = filename.substring(filename.lastIndexOf('.'), filename.length);
+            reader = null;
+            if (filetype == ".dem") parseDemo(uint8Array);
+            else unzipAndParse(uint8Array, filetype);
+        };
+        setStatus("loading demo");
+        drawHtmlThenContinueWith(() => reader.readAsArrayBuffer(evt.target.files[0]));
+    });
 
 </script>
 <script src="draw.js"></script>

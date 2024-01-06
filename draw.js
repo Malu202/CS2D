@@ -101,6 +101,19 @@ function drawPlayer(data, index, size, textSize) {
     context.fillText(name, drawX, drawY - size * 2);
     let a = 0;
 }
+function drawTestPoint(worldX, worldY) {
+    let drawX = clampPosition(worldX, true);
+    let drawY = clampPosition(worldY, false);
+
+    drawX = Math.round(drawX);
+    drawY = Math.round(drawY);
+
+    context.beginPath();
+    context.moveTo(drawX, drawY);
+    context.arc(drawX, drawY, 5, 0, 2 * Math.PI);
+    context.fillStyle = "red";
+    context.fill();
+}
 
 function fillCanvasWithImage(canv, ctx, img) {
     let imgScale = Math.min(canv.width / img.naturalWidth, canv.height / img.naturalHeight);
